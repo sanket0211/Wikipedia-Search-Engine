@@ -1,4 +1,32 @@
-import xml.sax
+import xml.sax,re,os
+import sys
+import os
+from heapq import *
+from Stemmer import Stemmer
+#from stemming.porter2 import stem
+spChar=' \r\t\n/.,\';\\][|":}{`=_)(&^%@#0987654321'
+
+stem=Stemmer('english')
+
+BODY=0
+CATEGORY=1
+EXTERNAL=2
+INFOBOX=3
+REF=4
+TITLE=5
+
+
+DOCUMENT_PER_FILE=5311
+LINES_PER_DOC=1000
+dicts=[dict() for i in xrange(6)]
+count=0
+file_count=1
+stopwords={}
+no_of_doc = 0
+
+dir_list=["body","category","external_links","infobox","reference","title"]
+
+ft = open('Index/title_id.txt','w')
 
 class ABContentHandler(xml.sax.ContentHandler):
     def __init__(self):
@@ -73,6 +101,7 @@ class ABContentHandler(xml.sax.ContentHandler):
             global count, no_of_doc
             count+=1
             no_of_doc +=1
+            print count
             Tokenize(self.doc_id.strip(), self.title, self.infobox, self.category, self.ref, self.external,self.body)
             #print "** PAGE ENDS ***"
         if name=="id":
@@ -176,7 +205,7 @@ class Tokenize:
 
         self.infobox=self.remove_stopwords_and_stem(self.infobox)
         self.category=self.remove_stopwords_and_stem(self.category)
-        self.ref=self.remove_stopwords_and_stem(sourceFileName.ref)
+        self.ref=self.remove_stopwords_and_stem(self.ref)
         self.body=self.remove_stopwords_and_stem(self.body)
         self.external=self.remove_stopwords_and_stem(self.external)
         self.title=self.remove_stopwords_and_stem(self.title)
@@ -206,7 +235,7 @@ class Tokenize:
 
 def main(sourceFileName):
 
-    f = open('src/stopwords.txt','r')
+    f = open('./stopwords.txt','r')
     global stopwords, ft
     stopwords={}
     for i in f:
@@ -231,4 +260,4 @@ def main(sourceFileName):
     # ft.close()
  
 if __name__ == "__main__":
-main(sys.argv[1])
+    main(sys.argv[1])
