@@ -16,7 +16,7 @@ REF=4
 TITLE=5
 
 
-DOCUMENT_PER_FILE=5311
+DOCUMENT_PER_FILE=15000
 LINES_PER_DOC=1000
 dicts=[dict() for i in xrange(6)]
 count=0
@@ -26,7 +26,9 @@ no_of_doc = 0
 
 dir_list=["body","category","external_links","infobox","reference","title"]
 
-ft = open('Index/title_id.txt','w')
+ft = open('title_id.txt','w')
+
+path=""
 
 class ABContentHandler(xml.sax.ContentHandler):
     def __init__(self):
@@ -101,7 +103,6 @@ class ABContentHandler(xml.sax.ContentHandler):
             global count, no_of_doc
             count+=1
             no_of_doc +=1
-            print count
             Tokenize(self.doc_id.strip(), self.title, self.infobox, self.category, self.ref, self.external,self.body)
             #print "** PAGE ENDS ***"
         if name=="id":
@@ -221,7 +222,7 @@ class Tokenize:
         global count
         if count==DOCUMENT_PER_FILE:
             for i in xrange(len(dir_list)):
-                self.write_file(i, "Index/"+dir_list[i])
+                self.write_file(i, path+"/"+dir_list[i])
 
             global dicts,file_count
             dicts = [dict() for i in xrange(6)]
@@ -232,11 +233,149 @@ class Tokenize:
 
 
 
+def merge(directory):
+        
+    global file_count
+    latest_word = ''
+    line_count=0
+    sub_count = 1
+    file_name = directory + "/final"
+    sec_file_name = directory + "/secondary.txt"
+    f_sec = open(sec_file_name,'w')
 
-def main(sourceFileName):
+    f=open(file_name+str(sub_count)+".txt",'w')
+    count =0
+    l=[]
+    stack = []
+    file_poin=[]
+    for i in xrange(1,file_count+1):
+    	f0= open(directory+'/file'+str(i)+'.txt','r') 
+    	s=f0.readline()[:-1]
+    	s1 = s[:s[:s.find(',')].find(':')]
+    	l.append((s1, s, f0))
+    	file_poin.append(f0)
+    heapify(l)
+    while(count<file_count):
+    	top = heappop(l)
+    	s0 = top[0]
+    	s1 = top[1]
+    	f1 = top[2]
+    	s_list = []
+    	s_list.append(s1)
+    	s=f1.readline()[:-1]
+    	if s=='':
+    		count+=1
+    	else:
+    		heappush(l, (s[:s[:s.find(',')].find(':')], s, f1))
+    	if count==file_count:
+    		break
 
+    	while(1):
+	    	try:
+	        	tmp = heappop(l)
+	    	except IndexError:
+	        	break
+
+	    	s0 = tmp[0]
+	    	s2 = tmp[1]
+	    	f2 = tmp[2]
+
+	    
+	    	#print s2
+	    	#print s_list[-1][:s_list[-1][:s2[-1].find(',')].find(':')]
+	    	if s0 != s_list[-1][:s_list[-1][:s2[-1].find(',')].find(':')]:
+        	    heappush(l,(s0,s2,f2))
+        	    break
+	    	else:
+        	    s_list.append(s2)
+        	    s3 = f2.readline()[:-1]
+        	    #print s3
+        	    if s3=='':
+            		count+=1
+        	    else:
+            		heappush(l,(s3[:s3[:s3.find(',')].find(':')],s3,f2))
+
+        if len(s_list)==1:
+        	s = s_list[0]
+        	line_count+=1
+        	latest_word = s[:s.find(':')]            
+        	f.write(s+'\n')
+        	if line_count==LINES_PER_DOC:
+        		line_count=0
+        		f.close()
+        		f_sec.write(file_name + str(sub_count)+".txt"+":"+latest_word+'\n')
+        		sub_count+=1
+        		f = open(file_name+str(sub_count)+".txt",'w')
+           
+        else:
+        	tfid=0
+
+	    	word_pre = s_list[0][:s_list[0].find(',')]
+	    	word = word_pre[:word_pre.find(':')]
+	    	tgif =0
+	    	s=""
+	    	flag=0
+	    	for i in s_list:
+        	    content = i[i.find(',')+1:]
+        	    content_pre = i[:i.find(',')]
+        	    tgif_tmp = int(content_pre[content_pre.find(':')+1:])
+        	    tgif += tgif_tmp
+        	    if flag==0:
+        	        s=content
+        	        flag=1
+        	    else:
+            		s+=','+content
+    	#print word+':'+str(tgif)+','+s+'\n'
+    		line_count+=1
+    		latest_word=word
+    		f.write(word+':'+str(tgif)+','+s+'\n')
+    		if line_count==LINES_PER_DOC:
+    			line_count=0
+               	f.close()
+               	f_sec.write(file_name + str(sub_count)+".txt"+":"+word+'\n')
+               	sub_count+=1
+               	f = open(file_name+str(sub_count)+".txt",'w')
+    if f:
+        f.close()
+
+    if line_count>0:
+        f_sec.write(file_name + str(sub_count)+".txt"+":"+latest_word+'\n')
+        
+    f_sec.close()
+
+    for i in file_poin:
+		i.close()
+
+
+
+
+def write_rest(flag, directory):
+    global dicts
+    global file_count
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+    keys = dicts[flag].keys()
+    keys.sort()
+    #l = sorted(dicts[flag].iteritems(), key=lambda key_value: key_value[0])
+    m = open(directory+'/file'+str(file_count)+".txt",'w+')
+    print directory
+    print file_count
+    print m
+    for i in keys:
+    	tgif = dicts[flag][i][0]
+    	doc_list = dicts[flag][i][1][:-1]
+    	final = i+":"+str(tgif)+","+doc_list+'\n'
+    	m.write(final)
+
+    #m.close()
+
+
+
+def main(sourceFileName, path_var):
+	
     f = open('./stopwords.txt','r')
-    global stopwords, ft
+    global stopwords, ft, path
+    path = path_var
     stopwords={}
     for i in f:
         for j in re.compile(r'[^A-Za-z]+').split(i.lower()):
@@ -246,18 +385,19 @@ def main(sourceFileName):
     source = open(sourceFileName)
     xml.sax.parse(source, ABContentHandler())
 
-    #global dicts,file_count
-    #dicts = [dict() for i in xrange(6)]
 
-    # for i in xrange(len(dir_list)):
-    #     write_rest(i,"Index/"+dir_list[i])
-    #     merge("Index/"+dir_list[i])
-    #     os.system("rm Index/"+dir_list[i]+"/file*")
+    for i in xrange(len(dir_list)):
+    	write_rest(i,"Index/"+dir_list[i])
+    	merge("Index/"+dir_list[i])
+    	os.system("rm Index/"+dir_list[i]+"/file*")
 
-    # f = open('Index/doc_count.txt','w')
-    # f.write(str(no_of_doc)+'\n')
-    # f.close()
-    # ft.close()
+
+   	f = open('Index/doc_count.txt','w')
+   	f.write(str(no_of_doc)+'\n')
+   	f.close()	
+   	ft.close()
+
+
  
 if __name__ == "__main__":
-    main(sys.argv[1])
+    main(sys.argv[1], sys.argv[2])
