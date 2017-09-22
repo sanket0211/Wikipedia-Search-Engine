@@ -1,7 +1,7 @@
 Wikipedia-Search-Engine
 ========================
 
-This repository consists of the mini project done as part of the course Information Retrieval and Extraction - Spring 2014. The course was instructed by [Dr. Vasudeva Varma](http://faculty.iiit.ac.in/~vv/Home.html). 
+This repository consists of the mini project done as part of the course Information Retrieval and Extraction - Spring 2017. The course was instructed by [Dr. Vasudeva Varma](http://faculty.iiit.ac.in/~vv/Home.html). 
 
 ##Requirements
 Python 2.6 or above
@@ -33,13 +33,13 @@ The src folder contains the following files:
 This function takes as input the corpus and creates the entire index in field separated manner. Along with the field files, it also creates the offsets for the same. It also creates a map for the title and the document id along with its offset. Apart from this it also creates the vocabulary List
 
 In order to run this code run the following:
-**python wikiIndexer.py ./sampleText ./outputFolderPath**
+**python index.py ./sampleText ./outputFolderPath**
 
 * search.py
 This function takes as input the query and returns the top ten results from the Wikipedia corpus.
 
 In order to run this code run the following:
-**python search.py ./outputFolderPath**
+**python search.py 
 
 ###Helper Functions:
 
